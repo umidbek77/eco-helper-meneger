@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ECOHELPER | Tashkilotlar Paneli</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --secondary-color: #1e293b;
+      --success-color: #10b981;
+      --warning-color: #f59e0b;
+      --danger-color: #ef4444;
+      --background-color: #f8fafc;
+      --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      --sidebar-width: 280px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+    }
+
+    .main-container {
+      background: var(--background-color);
+      border-radius: 20px;
+      margin: 20px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      min-height: calc(100vh - 40px);
+    }
+
+    .sidebar {
+      background: linear-gradient(180deg, var(--secondary-color) 0%, #334155 100%);
+      color: white;
+      width: var(--sidebar-width);
+      min-height: 100%;
+      padding: 0;
+      position: fixed;
+      left: 20px;
+      top: 20px;
+      border-radius: 20px 0 0 20px;
+      z-index: 1000;
+    }
+
+    .sidebar-header {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 25px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
+    }
+
+    .sidebar-header h4 {
+      margin: 0;
+      font-weight: 600;
+      font-size: 1.2rem;
+    }
+
+    .sidebar-nav {
+      padding: 20px 0;
+    }
+
+    .nav-item {
+      margin: 5px 15px;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateX(5px);
+    }
+
+    .nav-link {
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .nav-link:hover {
+      color: white;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .nav-link.active {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .nav-link i {
+      margin-right: 12px;
+      font-size: 1.1rem;
+      width: 20px;
+    }
+
+    .content {
+      margin-left: var(--sidebar-width);
+      padding: 30px;
+      background: var(--background-color);
+      min-height: 100vh;
+    }
+
+    .section {
+      display: none;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .page-header {
+      background: white;
+      padding: 25px 30px;
+      border-radius: 15px;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 30px;
+      border-left: 5px solid var(--primary-color);
+    }
+
+    .page-header h2 {
+      margin: 0;
+      color: var(--secondary-color);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+    }
+
+    .page-header h2 i {
+      margin-right: 15px;
+      color: var(--primary-color);
+    }
+
+    .card {
+      border: none;
+      border-radius: 15px;
+      box-shadow: var(--card-shadow);
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+    }
+
+    .table {
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+      background: white;
+    }
+
+    .table thead th {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      font-weight: 600;
+      padding: 15px;
+    }
+
+    .table tbody tr {
+      transition: all 0.3s ease;
+    }
+
+    .table tbody tr:hover {
+      background: rgba(37, 99, 235, 0.05);
+      transform: scale(1.01);
+    }
+
+    .table tbody td {
+      padding: 15px;
+      vertical-align: middle;
+      border-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .btn {
+      border-radius: 10px;
+      font-weight: 500;
+      padding: 12px 24px;
+      transition: all 0.3s ease;
+      border: none;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, var(--success-color), #22c55e);
+    }
+
+    .btn-warning {
+      background: linear-gradient(135deg, var(--warning-color), #fbbf24);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, var(--danger-color), #f87171);
+    }
+
+    .form-control, .form-select {
+      border-radius: 10px;
+      border: 2px solid #e2e8f0;
+      padding: 12px 16px;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    #mapContainer {
+      height: 500px;
+      border-radius: 15px;
+      box-shadow: var(--card-shadow);
+      overflow: hidden;
+    }
+
+    .status-badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .status-pending {
+      background: rgba(251, 191, 36, 0.1);
+      color: #d97706;
+    }
+
+    .status-progress {
+      background: rgba(59, 130, 246, 0.1);
+      color: #2563eb;
+    }
+
+    .status-completed {
+      background: rgba(34, 197, 94, 0.1);
+      color: #16a34a;
+    }
+
+    .message-image {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .message-image:hover {
+      transform: scale(1.1);
+    }
+
+    .stats-card {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border-radius: 15px;
+      padding: 25px;
+      text-align: center;
+    }
+
+    .stats-card:nth-child(2) .stats-card {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+    }
+
+    .stats-card:nth-child(3) .stats-card {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+
+    .stats-card:nth-child(4) .stats-card {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+    }
+
+    .stats-number {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      min-width: 300px;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        left: 0;
+        top: 0;
+        border-radius: 0;
+      }
+      
+      .content {
+        margin-left: 0;
+        padding: 20px;
+      }
+      
+      .main-container {
+        margin: 10px;
+        border-radius: 15px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="main-container">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="sidebar-header">
+        <h4><i class="bi bi-leaf-fill"></i> ECOHELPER</h4>
+        <small>Tashkilotlar Paneli</small>
+      </div>
+      <div class="sidebar-nav">
+        <div class="nav-item">
+          <a href="#" class="nav-link active" onclick="showSection('messages')">
+            <i class="bi bi-inbox-fill"></i> Qabul qilingan xabarlar
+          </a>
+        </div>
+        <div class="nav-item">
+          <a href="#" class="nav-link" onclick="showSection('map')">
+            <i class="bi bi-geo-alt-fill"></i> Xaritadagi muammolar
+          </a>
+        </div>
+        <div class="nav-item">
+          <a href="#" class="nav-link" onclick="showSection('status')">
+            <i class="bi bi-check-circle-fill"></i> Holat belgilang
+          </a>
+        </div>
+        <div class="nav-item">
+          <a href="#" class="nav-link" onclick="showSection('response')">
+            <i class="bi bi-reply-fill"></i> Fuqaroga javob
+          </a>
+        </div>
+        <div class="nav-item">
+          <a href="#" class="nav-link" onclick="showSection('assign')">
+            <i class="bi bi-person-lines-fill"></i> Brigada tayinlash
+          </a>
+        </div>
+        <div class="nav-item">
+          <a href="#" class="nav-link" onclick="showSection('report')">
+            <i class="bi bi-file-earmark-pdf-fill"></i> Hisobot yuborish
+          </a>
+        </div>
+        <div class="nav-item">
+          <a href="#" class="nav-link" onclick="showSection('statistics')">
+            <i class="bi bi-graph-up-arrow"></i> Statistika
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Content -->
+    <main class="content">
+      <!-- Messages Section -->
+      <div id="messages" class="section active">
+        <div class="page-header">
+          <h2><i class="bi bi-inbox-fill"></i> Qabul qilingan xabarlar</h2>
+        </div>
+        
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th><i class="bi bi-hash"></i> ID</th>
+                <th><i class="bi bi-person-fill"></i> Ismi</th>
+                <th><i class="bi bi-geo-alt-fill"></i> Hudud</th>
+                <th><i class="bi bi-exclamation-triangle-fill"></i> Muammo</th>
+                <th><i class="bi bi-calendar-fill"></i> Sana</th>
+                <th><i class="bi bi-flag-fill"></i> Holat</th>
+                <th><i class="bi bi-image-fill"></i> Rasm</th>
+                <th><i class="bi bi-gear-fill"></i> Amallar</th>
+              </tr>
+            </thead>
+            <tbody id="messageList">
+              <!-- Dinamik tarzda JS orqali to'ldiriladi -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Map Section -->
+      <div id="map" class="section">
+        <div class="page-header">
+          <h2><i class="bi bi-geo-alt-fill"></i> Muammoli joylar xaritasi</h2>
+        </div>
+        <div id="mapContainer"></div>
+      </div>
+
+      <!-- Status Section -->
+      <div id="status" class="section">
+        <div class="page-header">
+          <h2><i class="bi bi-check-circle-fill"></i> Holat belgilang</h2>
+        </div>
+        
+        <div class="card">
+          <div class="card-body">
+            <div class="mb-3">
+              <label for="messageSelect" class="form-label">
+                <i class="bi bi-envelope-fill"></i> Xabarni tanlang
+              </label>
+              <select class="form-select" id="messageSelect">
+                <option value="">Xabar tanlang...</option>
+              </select>
+            </div>
+            
+            <div class="mb-3">
+              <label for="statusSelect" class="form-label">
+                <i class="bi bi-flag-fill"></i> Yangi holat
+              </label>
+              <select class="form-select" id="statusSelect">
+                <option value="">Holat tanlang...</option>
+                <option value="progress">Bajarilmoqda</option>
+                <option value="completed">Yakunlandi</option>
+                <option value="pending">Kutilmoqda</option>
+              </select>
+            </div>
+            
+            <button class="btn btn-primary" onclick="updateStatus()">
+              <i class="bi bi-check-lg"></i> Holatni yangilash
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Response Section -->
+      <div id="response" class="section">
+        <div class="page-header">
+          <h2><i class="bi bi-reply-fill"></i> Fuqaroga javob yozish</h2>
+        </div>
+        
+        <div class="card">
+          <div class="card-body">
+            <div class="mb-3">
+              <label for="responseMessageSelect" class="form-label">
+                <i class="bi bi-envelope-fill"></i> Xabarni tanlang
+              </label>
+              <select class="form-select" id="responseMessageSelect">
+                <option value="">Javob beriladigan xabarni tanlang...</option>
+              </select>
+            </div>
+            
+            <div class="mb-3">
+              <label for="responseText" class="form-label">
+                <i class="bi bi-chat-text-fill"></i> Javob matni
+              </label>
+              <textarea class="form-control" id="responseText" rows="5" placeholder="Javob matnini kiriting..."></textarea>
+            </div>
+            
+            <button class="btn btn-success" onclick="sendResponse()">
+              <i class="bi bi-send-fill"></i> Javob yuborish
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Assign Section -->
+      <div id="assign" class="section">
+        <div class="page-header">
+          <h2><i class="bi bi-person-lines-fill"></i> Brigada tayinlash</h2>
+        </div>
+        
+        <div class="card">
+          <div class="card-body">
+            <div class="mb-3">
+              <label for="assignMessageSelect" class="form-label">
+                <i class="bi bi-envelope-fill"></i> Xabarni tanlang
+              </label>
+              <select class="form-select" id="assignMessageSelect">
+                <option value="">Topshiriq beriladigan xabarni tanlang...</option>
+              </select>
+            </div>
+            
+            <div class="mb-3">
+              <label for="brigadeSelect" class="form-label">
+                <i class="bi bi-people-fill"></i> Brigadani tanlang
+              </label>
+              <select class="form-select" id="brigadeSelect">
+                <option value="">Brigada tanlang...</option>
+                <option value="cleaning">1-Brigada (Tozalash)</option>
+                <option value="landscaping">2-Brigada (Obodonlashtirish)</option>
+                <option value="maintenance">3-Brigada (Texnik xizmat)</option>
+                <option value="emergency">4-Brigada (Shoshilinch)</option>
+              </select>
+            </div>
+            
+            <div class="mb-3">
+              <label for="executorName" class="form-label">
+                <i class="bi bi-person-badge-fill"></i> Mas'ul xodim
+              </label>
+              <input type="text" class="form-control" id="executorName" placeholder="Mas'ul xodim ismini kiriting">
+            </div>
+            
+            <div class="mb-3">
+              <label for="assignmentNote" class="form-label">
+                <i class="bi bi-sticky-fill"></i> Qo'shimcha izoh
+              </label>
+              <textarea class="form-control" id="assignmentNote" rows="3" placeholder="Topshiriq bo'yicha qo'shimcha ma'lumot..."></textarea>
+            </div>
+            
+            <button class="btn btn-warning" onclick="assignBrigade()">
+              <i class="bi bi-person-check-fill"></i> Topshiriq berish
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Report Section -->
+      <div id="report" class="section">
+        <div class="page-header">
+          <h2><i class="bi bi-file-earmark-pdf-fill"></i> Hisobot yuborish</h2>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-body text-center">
+                <i class="bi bi-file-earmark-pdf-fill text-danger" style="font-size: 3rem;"></i>
+                <h5 class="mt-3">Kunlik hisobot</h5>
+                <p class="text-muted">Bugungi bajarilgan ishlar hisoboti</p>
+                <button class="btn btn-danger" onclick="downloadReport('daily')">
+                  <i class="bi bi-download"></i> Yuklab olish
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-body text-center">
+                <i class="bi bi-file-earmark-excel-fill text-success" style="font-size: 3rem;"></i>
+                <h5 class="mt-3">Haftalik hisobot</h5>
+                <p class="text-muted">Haftalik statistika va tahlil</p>
+                <button class="btn btn-success" onclick="downloadReport('weekly')">
+                  <i class="bi bi-download"></i> Yuklab olish
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistics Section -->
+      <div id="statistics" class="section">
+        <div class="page-header">
+          <h2><i class="bi bi-graph-up-arrow"></i> Statistika</h2>
+        </div>
+        
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="stats-card">
+              <div class="stats-number" id="totalMessages">0</div>
+              <div>Jami xabarlar</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stats-card">
+              <div class="stats-number" id="completedTasks">0</div>
+              <div>Bajarilgan</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stats-card">
+              <div class="stats-number" id="pendingTasks">0</div>
+              <div>Kutilayotgan</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stats-card">
+              <div class="stats-number" id="progressTasks">0</div>
+              <div>Jarayonda</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Notification Container -->
+  <div id="notificationContainer"></div>
+
+  <!-- Image Modal -->
+  <div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Rasm ko'rish</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-center">
+          <img id="modalImage" class="img-fluid" style="max-height: 500px;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // Global variables
+    let map;
+    let messages = [
+      {
+        id: 1,
+        name: 'Aliyev Botir Karimovich',
+        region: 'Olmazor tumani, Toshkent',
+        issue: 'Chiqindilar ko\'payib ketgan, tezda tozalash kerak',
+        date: '2025-01-28',
+        status: 'pending',
+        image: 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=300',
+        coords: [41.3305, 69.2415],
+        brigade: null,
+        executor: null,
+        response: null
+      },
+      {
+        id: 2,
+        name: 'Karimova Dildora Shavkatovna',
+        region: 'Chilonzor tumani, Toshkent',
+        issue: 'Daraxt kesilgan joyni obodonlashtirish',
+        date: '2025-01-27',
+        status: 'progress',
+        image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=300',
+        coords: [41.2995, 69.2700],
+        brigade: 'landscaping',
+        executor: 'Yusupov Aziz',
+        response: null
+      },
+      {
+        id: 3,
+        name: 'Toshmatov Javlon Utkurovich',
+        region: 'Yunusobod tumani, Toshkent',
+        issue: 'Yo\'l chetida moy to\'kilgan, tozalash zarur',
+        date: '2025-01-26',
+        status: 'completed',
+        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300',
+        coords: [41.3667, 69.2892],
+        brigade: 'cleaning',
+        executor: 'Rahmonov Islom',
+        response: 'Muammo hal qilindi. Rahmat!'
+      }
+    ];
+
+    // Initialize application
+    document.addEventListener('DOMContentLoaded', function() {
+      renderMessages();
+      updateSelectOptions();
+      updateStatistics();
+      initializeMap();
+    });
+
+    // Show section function
+    function showSection(sectionId) {
+      // Hide all sections
+      document.querySelectorAll('.section').forEach(section => {
+        section.classList.remove('active');
+      });
+      
+      // Remove active class from all nav links
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+      });
+      
+      // Show selected section
+      document.getElementById(sectionId).classList.add('active');
+      
+      // Add active class to clicked nav link
+      event.target.closest('.nav-link').classList.add('active');
+      
+      // Initialize map if map section is shown
+      if (sectionId === 'map' && !map) {
+        setTimeout(initializeMap, 100);
+      }
+    }
+
+    // Render messages table
+    function renderMessages() {
+      const messageList = document.getElementById('messageList');
+      messageList.innerHTML = '';
+      
+      messages.forEach(msg => {
+        const statusClass = `status-${msg.status}`;
+        const statusText = getStatusText(msg.status);
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><strong>#${msg.id}</strong></td>
+          <td>
+            <div>
+              <strong>${msg.name}</strong>
+            </div>
+          </td>
+          <td>
+            <i class="bi bi-geo-alt-fill text-primary"></i> ${msg.region}
+          </td>
+          <td>${msg.issue}</td>
+          <td>
+            <i class="bi bi-calendar-fill text-muted"></i> ${formatDate(msg.date)}
+          </td>
+          <td>
+            <span class="status-badge ${statusClass}">${statusText}</span>
+          </td>
+          <td>
+            <img src="${msg.image}" class="message-image" onclick="showImageModal('${msg.image}')" alt="Muammo rasmi">
+          </td>
+          <td>
+            <div class="btn-group" role="group">
+              <button class="btn btn-sm btn-outline-primary" onclick="viewDetails(${msg.id})" title="Batafsil">
+                <i class="bi bi-eye-fill"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-success" onclick="quickAssign(${msg.id})" title="Tez tayinlash">
+                <i class="bi bi-person-plus-fill"></i>
+              </button>
+            </div>
+          </td>
+        `;
+        messageList.appendChild(row);
+      });
+    }
+
+    // Update select options
+    function updateSelectOptions() {
+      const selects = ['messageSelect', 'responseMessageSelect', 'assignMessageSelect'];
+      
+      selects.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        select.innerHTML = '<option value="">Xabar tanlang...</option>';
+        
+        messages.forEach(msg => {
+          const option = document.createElement('option');
+          option.value = msg.id;
+          option.textContent = `#${msg.id} - ${msg.name} (${msg.issue.substring(0, 30)}...)`;
+          select.appendChild(option);
+        });
+      });
+    }
+
+    // Initialize map
+    function initializeMap() {
+      if (map) {
+        map.remove();
+      }
+      
+      map = L.map('mapContainer').setView([41.3111, 69.2797], 12);
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+      
+      // Add markers for each message
+      messages.forEach(msg => {
+        const color = msg.status === 'completed' ? 'green' : 
+                     msg.status === 'progress' ? 'orange' : 'red';
+        
+        const marker = L.marker(msg.coords).addTo(map);
+        marker.bindPopup(`
+          <div style="min-width: 200px;">
+            <h6>${msg.name}</h6>
+            <p><strong>Muammo:</strong> ${msg.issue}</p>
+            <p><strong>Hudud:</strong> ${msg.region}</p>
+            <p><strong>Holat:</strong> <span class="status-badge status-${msg.status}">${getStatusText(msg.status)}</span></p>
+            <img src="${msg.image}" style="width: 100%; max-width: 150px; border-radius: 5px;">
+          </div>
+        `);
+      });
+    }
+
+    // Update status function
+    function updateStatus() {
+      const messageId = parseInt(document.getElementById('messageSelect').value);
+      const newStatus = document.getElementById('statusSelect').value;
+      
+      if (!messageId || !newStatus) {
+        showNotification('warning', 'Iltimos, xabar va holatni tanlang!');
+        return;
+      }
+      
+      const message = messages.find(msg => msg.id === messageId);
+      if (message) {
+        message.status = newStatus;
+        renderMessages();
+        updateStatistics();
+        if (map) {
+          initializeMap(); // Update map markers
+        }
+        showNotification('success', `Xabar #${messageId} holati yangilandi!`);
+        
+        // Clear form
+        document.getElementById('messageSelect').value = '';
+        document.getElementById('statusSelect').value = '';
+      }
+    }
+
+    // Send response function
+    function sendResponse() {
+      const messageId = parseInt(document.getElementById('responseMessageSelect').value);
+      const responseText = document.getElementById('responseText').value.trim();
+      
+      if (!messageId || !responseText) {
+        showNotification('warning', 'Iltimos, xabar va javob matnini kiriting!');
+        return;
+      }
+      
+      const message = messages.find(msg => msg.id === messageId);
+      if (message) {
+        message.response = responseText;
+        showNotification('success', `Fuqaroga javob yuborildi!`);
+        
+        // Clear form
+        document.getElementById('responseMessageSelect').value = '';
+        document.getElementById('responseText').value = '';
+      }
+    }
+
+    // Assign brigade function
+    function assignBrigade() {
+      const messageId = parseInt(document.getElementById('assignMessageSelect').value);
+      const brigade = document.getElementById('brigadeSelect').value;
+      const executor = document.getElementById('executorName').value.trim();
+      const note = document.getElementById('assignmentNote').value.trim();
+      
+      if (!messageId || !brigade || !executor) {
+        showNotification('warning', 'Iltimos, barcha majburiy maydonlarni to\'ldiring!');
+        return;
+      }
+      
+      const message = messages.find(msg => msg.id === messageId);
+      if (message) {
+        message.brigade = brigade;
+        message.executor = executor;
+        message.status = 'progress';
+        message.assignmentNote = note;
+        
+        renderMessages();
+        updateStatistics();
+        if (map) {
+          initializeMap(); // Update map markers
+        }
+        showNotification('success', `Brigada tayinlandi va vazifa berildi!`);
+        
+        // Clear form
+        document.getElementById('assignMessageSelect').value = '';
+        document.getElementById('brigadeSelect').value = '';
+        document.getElementById('executorName').value = '';
+        document.getElementById('assignmentNote').value = '';
+      }
+    }
+
+    // Download report function
+    function downloadReport(type) {
+      const reportData = generateReportData(type);
+      const blob = new Blob([reportData], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${type}-hisobot-${new Date().toISOString().split('T')[0]}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      showNotification('success', `${type === 'daily' ? 'Kunlik' : 'Haftalik'} hisobot yuklab olindi!`);
+    }
+
+    // Generate report data
+    function generateReportData(type) {
+      const today = new Date();
+      const dateStr = today.toLocaleDateString('uz-UZ');
+      
+      let report = `ECOHELPER - ${type === 'daily' ? 'KUNLIK' : 'HAFTALIK'} HISOBOT\n`;
+      report += `Sana: ${dateStr}\n`;
+      report += `=====================================\n\n`;
+      
+      report += `UMUMIY STATISTIKA:\n`;
+      report += `- Jami xabarlar: ${messages.length}\n`;
+      report += `- Bajarilgan: ${messages.filter(m => m.status === 'completed').length}\n`;
+      report += `- Jarayonda: ${messages.filter(m => m.status === 'progress').length}\n`;
+      report += `- Kutilayotgan: ${messages.filter(m => m.status === 'pending').length}\n\n`;
+      
+      report += `BATAFSIL MA'LUMOT:\n`;
+      messages.forEach(msg => {
+        report += `\n#${msg.id} - ${msg.name}\n`;
+        report += `Hudud: ${msg.region}\n`;
+        report += `Muammo: ${msg.issue}\n`;
+        report += `Holat: ${getStatusText(msg.status)}\n`;
+        if (msg.executor) {
+          report += `Mas'ul: ${msg.executor}\n`;
+        }
+        if (msg.response) {
+          report += `Javob: ${msg.response}\n`;
+        }
+        report += `---\n`;
+      });
+      
+      return report;
+    }
+
+    // View details function
+    function viewDetails(messageId) {
+      const message = messages.find(msg => msg.id === messageId);
+      if (message) {
+        let details = `XABAR TAFSILOTLARI\n\n`;
+        details += `ID: #${message.id}\n`;
+        details += `Ismi: ${message.name}\n`;
+        details += `Hudud: ${message.region}\n`;
+        details += `Muammo: ${message.issue}\n`;
+        details += `Sana: ${formatDate(message.date)}\n`;
+        details += `Holat: ${getStatusText(message.status)}\n`;
+        
+        if (message.executor) {
+          details += `Mas'ul xodim: ${message.executor}\n`;
+        }
+        if (message.brigade) {
+          details += `Brigada: ${getBrigadeText(message.brigade)}\n`;
+        }
+        if (message.response) {
+          details += `Javob: ${message.response}\n`;
+        }
+        if (message.assignmentNote) {
+          details += `Qo'shimcha izoh: ${message.assignmentNote}\n`;
+        }
+        
+        alert(details);
+      }
+    }
+
+    // Quick assign function
+    function quickAssign(messageId) {
+      const message = messages.find(msg => msg.id === messageId);
+      if (message && message.status === 'pending') {
+        // Auto assign to cleaning brigade
+        message.brigade = 'cleaning';
+        message.executor = 'Tez tayinlangan xodim';
+        message.status = 'progress';
+        
+        renderMessages();
+        updateStatistics();
+        if (map) {
+          initializeMap();
+        }
+        showNotification('success', `Xabar #${messageId} tezda tayinlandi!`);
+      } else {
+        showNotification('warning', 'Bu xabar allaqachon tayinlangan!');
+      }
+    }
+
+    // Show image modal
+    function showImageModal(imageSrc) {
+      document.getElementById('modalImage').src = imageSrc;
+      const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+      modal.show();
+    }
+
+    // Helper functions
+    function getStatusText(status) {
+      switch(status) {
+        case 'pending': return 'Kutilmoqda';
+        case 'progress': return 'Bajarilmoqda';
+        case 'completed': return 'Yakunlandi';
+        default: return 'Noma\'lum';
+      }
+    }
+
+    function getBrigadeText(brigade) {
+      switch(brigade) {
+        case 'cleaning': return '1-Brigada (Tozalash)';
+        case 'landscaping': return '2-Brigada (Obodonlashtirish)';
+        case 'maintenance': return '3-Brigada (Texnik xizmat)';
+        case 'emergency': return '4-Brigada (Shoshilinch)';
+        default: return 'Tayinlanmagan';
+      }
+    }
+
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('uz-UZ');
+    }
+
+    // Update statistics
+    function updateStatistics() {
+      document.getElementById('totalMessages').textContent = messages.length;
+      document.getElementById('completedTasks').textContent = messages.filter(m => m.status === 'completed').length;
+      document.getElementById('pendingTasks').textContent = messages.filter(m => m.status === 'pending').length;
+      document.getElementById('progressTasks').textContent = messages.filter(m => m.status === 'progress').length;
+    }
+
+    // Show notification
+    function showNotification(type, message) {
+      const notification = document.createElement('div');
+      notification.className = `alert alert-${type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'danger'} alert-dismissible fade show notification`;
+      notification.innerHTML = `
+        <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'x-circle'}-fill me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      
+      document.getElementById('notificationContainer').appendChild(notification);
+      
+      // Auto remove after 5 seconds
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.remove();
+        }
+      }, 5000);
+    }
+
+    // Add some sample data periodically (simulation)
+    setInterval(() => {
+      if (Math.random() < 0.1) { // 10% chance every interval
+        const sampleMessages = [
+          {
+            name: 'Abdullayev Karim',
+            region: 'Mirzo Ulugbek tumani',
+            issue: 'Hovli oldida chiqindi to\'plangan',
+            coords: [41.3500, 69.3200]
+          },
+          {
+            name: 'Rahimova Gulnora',
+            region: 'Sergeli tumani',
+            issue: 'Yo\'l chetidagi o\'tlar o\'sib ketgan',
+            coords: [41.2200, 69.2200]
+          }
+        ];
+        
+        const sample = sampleMessages[Math.floor(Math.random() * sampleMessages.length)];
+        const newMessage = {
+          id: messages.length + 1,
+          name: sample.name,
+          region: sample.region,
+          issue: sample.issue,
+          date: new Date().toISOString().split('T')[0],
+          status: 'pending',
+          image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300',
+          coords: sample.coords,
+          brigade: null,
+          executor: null,
+          response: null
+        };
+        
+        messages.push(newMessage);
+        renderMessages();
+        updateSelectOptions();
+        updateStatistics();
+        if (map) {
+          initializeMap();
+        }
+        showNotification('info', 'Yangi xabar qabul qilindi!');
+      }
+    }, 30000); // Check every 30 seconds
+  </script>
+</body>
+</html>
